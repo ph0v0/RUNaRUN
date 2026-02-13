@@ -766,7 +766,7 @@
             </div>
             <button id="startBtn">开始比赛</button>
             <button id="leaderboardBtn">🏆 排行榜</button>
-            <div id="version">v1.0.8</div>
+            <div id="version">v1.0.9</div>
         </div>
         <div id="leaderboard">
             <h1>🏆 排行榜</h1>
@@ -975,7 +975,6 @@
             beatInterval: 850,
             lastBeatTime: 0,
             nextBeatTime: 0,
-            roadOffset: 0,
             skyOffset: 0,
             particles: [],
             footstepEffects: [],
@@ -1172,6 +1171,17 @@
             });
         }
 
+        const roadLines = [];
+        const ROAD_LINE_SPACING = 50;
+        
+        function initRoadLines() {
+            roadLines.length = 0;
+            for (let z = 50; z <= 1000; z += ROAD_LINE_SPACING) {
+                roadLines.push({ z: z });
+            }
+        }
+        initRoadLines();
+
         function drawRoad() {
             const horizon = H * 0.4;
             const roadTopWidth = 50;
@@ -1189,8 +1199,15 @@
             ctx.closePath();
             ctx.fill();
 
-            for (let i = 0; i < 20; i++) {
-                const t = (i / 20 + gameState.roadOffset * 0.001) % 1;
+            roadLines.forEach((line) => {
+                if (gameState.isRunning) {
+                    line.z -= 8;
+                    if (line.z < 50) {
+                        line.z = 1000;
+                    }
+                }
+
+                const t = 1 - line.z / 1000;
                 const perspectiveT = Math.pow(t, 1.5);
                 const y = horizon + (H - horizon) * perspectiveT;
                 const width = roadTopWidth + (roadBottomWidth - roadTopWidth) * perspectiveT;
@@ -1202,27 +1219,39 @@
                 ctx.moveTo(W / 2 - width / 2, y);
                 ctx.lineTo(W / 2 + width / 2, y);
                 ctx.stroke();
-            }
+            });
 
-            for (let i = 0; i < 15; i++) {
-                const t = ((i * 2 + gameState.roadOffset * 0.002) % 30) / 30;
-                const nextT = ((i * 2 + 1 + gameState.roadOffset * 0.002) % 30) / 30;
+            const dashLines = [];
+            for (let i = 0; i < 20; i++) {
+                const baseZ = 1000 - i * 100;
+                dashLines.push({ z: baseZ, isDash: i % 2 === 0 });
+            }
+            
+            dashLines.forEach((dash) => {
+                let z = dash.z;
+                if (gameState.isRunning) {
+                    z = ((dash.z - 8 * (Date.now() / 16 % 1000)) % 1000);
+                    if (z < 0) z += 1000;
+                }
+                
+                if (!dash.isDash) return;
+                
+                const t = 1 - z / 1000;
                 const perspectiveT = Math.pow(t, 1.5);
                 const y = horizon + (H - horizon) * perspectiveT;
-                const nextY = horizon + (H - horizon) * Math.pow(nextT, 1.5);
                 const depthFactor = Math.min(1, t * 1.2);
                 
-                if (y < H && nextY < H) {
+                if (y < H - 50) {
                     ctx.strokeStyle = `rgba(255, 215, 0, ${depthFactor * 0.9})`;
                     ctx.lineWidth = 5 * perspectiveT + 2;
                     ctx.beginPath();
                     ctx.moveTo(W / 2, y);
-                    ctx.lineTo(W / 2, Math.min(nextY, H));
+                    ctx.lineTo(W / 2, y + 30 * perspectiveT);
                     ctx.stroke();
                 }
-            }
+            });
 
-            ctx.strokeStyle = '#FFF';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
             ctx.lineWidth = 8;
             ctx.beginPath();
             ctx.moveTo(W / 2 - roadTopWidth / 2, horizon);
@@ -1638,7 +1667,6 @@
             gameState.stamina -= 5;
 
             gameState.isRunning = true;
-            gameState.roadOffset += 50;
 
             gameState.footstepEffects.push({
                 x: W / 2,
@@ -1720,7 +1748,6 @@
             gameState.maxCombo = 0;
             gameState.gameOver = false;
             gameState.isRunning = false;
-            gameState.roadOffset = 0;
             gameState.particles = [];
             gameState.footstepEffects = [];
             gameState.scoreParticles = [];
@@ -1729,6 +1756,9 @@
             gameState.pendingBeatInterval = null;
             gameState.opponentDistance = 0;
             gameState.gameStarted = false;
+
+            initRoadLines();
+            initTrees();
 
             setNewTarget();
             updateStateUI();
