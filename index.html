@@ -766,7 +766,7 @@
             </div>
             <button id="startBtn">开始比赛</button>
             <button id="leaderboardBtn">🏆 排行榜</button>
-            <div id="version">v1.0.6</div>
+            <div id="version">v1.0.7</div>
         </div>
         <div id="leaderboard">
             <h1>🏆 排行榜</h1>
@@ -1174,26 +1174,18 @@
 
         function drawRoad() {
             const horizon = H * 0.4;
+            const roadTopWidth = 50;
+            const roadBottomWidth = 600;
             
             ctx.fillStyle = '#2a4a2a';
             ctx.fillRect(0, horizon, W, H - horizon);
 
-            const roadWidth = 600;
-            const roadLeft = W / 2 - roadWidth / 2;
-            
-            const perspectiveRoad = {
-                topWidth: 50,
-                topX: W / 2 - 25,
-                bottomWidth: roadWidth,
-                bottomX: roadLeft
-            };
-
             ctx.fillStyle = '#333';
             ctx.beginPath();
-            ctx.moveTo(perspectiveRoad.topX, horizon);
-            ctx.lineTo(perspectiveRoad.topX + perspectiveRoad.topWidth, horizon);
-            ctx.lineTo(perspectiveRoad.bottomX + perspectiveRoad.bottomWidth, H);
-            ctx.lineTo(perspectiveRoad.bottomX, H);
+            ctx.moveTo(W / 2 - roadTopWidth / 2, horizon);
+            ctx.lineTo(W / 2 + roadTopWidth / 2, horizon);
+            ctx.lineTo(W / 2 + roadBottomWidth / 2, H);
+            ctx.lineTo(W / 2 - roadBottomWidth / 2, H);
             ctx.closePath();
             ctx.fill();
 
@@ -1201,23 +1193,22 @@
             ctx.lineWidth = 3;
             for (let i = 0; i < 20; i++) {
                 const t = (i / 20 + gameState.roadOffset * 0.001) % 1;
-                const y = horizon + (H - horizon) * Math.pow(t, 1.5);
-                const width = perspectiveRoad.topWidth + (perspectiveRoad.bottomWidth - perspectiveRoad.topWidth) * Math.pow(t, 1.5);
-                const x = W / 2 - width / 2;
+                const perspectiveT = Math.pow(t, 1.5);
+                const y = horizon + (H - horizon) * perspectiveT;
+                const width = roadTopWidth + (roadBottomWidth - roadTopWidth) * perspectiveT;
                 
                 ctx.beginPath();
-                ctx.moveTo(x, y);
-                ctx.lineTo(x + width, y);
+                ctx.moveTo(W / 2 - width / 2, y);
+                ctx.lineTo(W / 2 + width / 2, y);
                 ctx.stroke();
             }
 
             ctx.strokeStyle = '#FFD700';
             ctx.lineWidth = 5;
-            const dashLength = 80;
             for (let i = 0; i < 15; i++) {
                 const t = ((i * 2 + gameState.roadOffset * 0.002) % 30) / 30;
-                const y = horizon + (H - horizon) * Math.pow(t, 1.5);
                 const nextT = ((i * 2 + 1 + gameState.roadOffset * 0.002) % 30) / 30;
+                const y = horizon + (H - horizon) * Math.pow(t, 1.5);
                 const nextY = horizon + (H - horizon) * Math.pow(nextT, 1.5);
                 
                 if (y < H && nextY < H) {
@@ -1231,12 +1222,12 @@
             ctx.strokeStyle = '#FFF';
             ctx.lineWidth = 8;
             ctx.beginPath();
-            ctx.moveTo(perspectiveRoad.topX, horizon);
-            ctx.lineTo(perspectiveRoad.bottomX, H);
+            ctx.moveTo(W / 2 - roadTopWidth / 2, horizon);
+            ctx.lineTo(W / 2 - roadBottomWidth / 2, H);
             ctx.stroke();
             ctx.beginPath();
-            ctx.moveTo(perspectiveRoad.topX + perspectiveRoad.topWidth, horizon);
-            ctx.lineTo(perspectiveRoad.bottomX + perspectiveRoad.bottomWidth, H);
+            ctx.moveTo(W / 2 + roadTopWidth / 2, horizon);
+            ctx.lineTo(W / 2 + roadBottomWidth / 2, H);
             ctx.stroke();
         }
 
@@ -1273,7 +1264,7 @@
                     : roadEdge + treeDistance;
                 
                 const screenY = horizon + (H - horizon) * perspectiveT;
-                const screenHeight = tree.height * perspectiveT * 5;
+                const screenHeight = tree.height * perspectiveT * 7.5;
                 const screenWidth = screenHeight * 0.4;
 
                 if (screenHeight < 15) return;
