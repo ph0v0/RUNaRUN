@@ -31,11 +31,11 @@
             touch-action: manipulation;
         }
         #gameContainer {
-            position: relative;
+            position: absolute;
             width: 1080px;
             height: 1920px;
             overflow: hidden;
-            transform-origin: center center;
+            transform-origin: left top;
         }
         #gameCanvas {
             display: block;
@@ -832,10 +832,7 @@
             
             container.style.transform = `scale(${scale})`;
             container.style.left = '0px';
-            
-            const scaledHeight = H * scale;
-            const offsetY = (windowHeight - scaledHeight) / 2;
-            container.style.top = `${offsetY}px`;
+            container.style.top = '0px';
         }
 
         window.addEventListener('resize', resizeGame);
