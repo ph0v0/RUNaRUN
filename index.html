@@ -1710,13 +1710,11 @@
         document.getElementById('restartBtn').addEventListener('click', restartGame);
         document.getElementById('shareBtn').addEventListener('click', async () => {
             const score = document.getElementById('finalScore').querySelector('span').textContent;
-            const distance = document.getElementById('finalDistance').textContent;
-            const combo = document.getElementById('finalCombo').textContent;
             const playerName = gameState.playerName;
             
             const shareData = {
-                title: 'RUNaRUN 跑步节奏游戏',
-                text: `${playerName} 在 RUNaRUN 跑了 ${distance} 米，最高连击 ${combo}，得分 ${score}！来挑战我吧！`,
+                title: '动感跑啊跑',
+                text: `我是【${playerName}】，我在【动感跑啊跑】里获得了【${score}】分，你能超过我吗？^_^`,
                 url: window.location.href
             };
             
