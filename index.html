@@ -7,7 +7,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <title>动感跑啊跑</title>
     <meta property="og:title" content="动感跑啊跑">
-    <meta property="og:description" content="一款节奏类跑步游戏，跟随心跳节拍点击，挑战你的反应极限！">
+    <meta property="og:description" content="节奏跑步游戏，跟随心跳踩下节拍，挑战你的好友，告诉TA，你才是真闪电">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://ph0v0.github.io/RUNaRUN/">
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -1716,9 +1716,12 @@
             const score = document.getElementById('finalScore').querySelector('span').textContent;
             const playerName = gameState.playerName;
             
+            const shareTitle = `我是【${playerName}】，我在【动感跑啊跑】里获得了【${score}】分，你能超过我吗？^_^`;
+            document.title = shareTitle;
+            
             const shareData = {
-                title: '动感跑啊跑',
-                text: `我是【${playerName}】，我在【动感跑啊跑】里获得了【${score}】分，你能超过我吗？^_^`,
+                title: shareTitle,
+                text: shareTitle,
                 url: window.location.href
             };
             
