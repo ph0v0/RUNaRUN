@@ -766,7 +766,7 @@
             </div>
             <button id="startBtn">开始比赛</button>
             <button id="leaderboardBtn">🏆 排行榜</button>
-            <div id="version">v1.1.0</div>
+            <div id="version">v1.1.1</div>
         </div>
         <div id="leaderboard">
             <h1>🏆 排行榜</h1>
@@ -916,15 +916,23 @@
 
         let leaderboardData = [...defaultLeaderboard];
 
+        function sortLeaderboard(data) {
+            return data.sort((a, b) => {
+                if (b.distance !== a.distance) {
+                    return b.distance - a.distance;
+                }
+                return b.score - a.score;
+            });
+        }
+
         async function loadLeaderboard() {
             try {
                 const snapshot = await db.collection('leaderboard')
-                    .orderBy('score', 'desc')
                     .limit(50)
                     .get();
                 
                 if (!snapshot.empty) {
-                    leaderboardData = snapshot.docs.map(doc => doc.data());
+                    leaderboardData = sortLeaderboard(snapshot.docs.map(doc => doc.data()));
                 }
             } catch (error) {
                 console.error('加载排行榜失败:', error);
@@ -1715,7 +1723,7 @@
             await saveScore(playerData);
             await loadLeaderboard();
             
-            const allData = [...leaderboardData];
+            const allData = sortLeaderboard([...leaderboardData]);
             
             const list = document.getElementById('gameOverLeaderboardList');
             list.innerHTML = '';
