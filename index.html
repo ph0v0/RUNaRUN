@@ -766,7 +766,7 @@
             </div>
             <button id="startBtn">开始比赛</button>
             <button id="leaderboardBtn">🏆 排行榜</button>
-            <div id="version">v1.0.9</div>
+            <div id="version">v1.1.0</div>
         </div>
         <div id="leaderboard">
             <h1>🏆 排行榜</h1>
@@ -803,7 +803,7 @@
             <div id="distanceInfo">
                 <div id="distanceLabel">距离</div>
                 <div><span id="distanceValue">0</span> <span id="distanceUnit">米</span></div>
-                <div id="levelGoal">目标: 200米</div>
+                <div id="levelGoal">目标: 800米</div>
             </div>
             <div id="distanceProgress">
                 <div id="distanceFill" style="height: 0%"></div>
@@ -902,16 +902,16 @@
         };
 
         const defaultLeaderboard = [
-            { name: '闪电侠', avatar: '⚡', score: 1520, distance: 200, maxCombo: 48, color: '#FFD700' },
-            { name: '风行者', avatar: '🌪️', score: 1380, distance: 200, maxCombo: 42, color: '#C0C0C0' },
-            { name: '疾风少年', avatar: '💨', score: 1150, distance: 200, maxCombo: 35, color: '#CD7F32' },
-            { name: '跑步达人', avatar: '🏃', score: 980, distance: 198, maxCombo: 30, color: '#4ECDC4' },
-            { name: '节奏大师', avatar: '🎵', score: 850, distance: 195, maxCombo: 28, color: '#FF6B6B' },
-            { name: '马拉松王', avatar: '👑', score: 720, distance: 190, maxCombo: 25, color: '#9B59B6' },
-            { name: '追风者', avatar: '🦅', score: 650, distance: 185, maxCombo: 22, color: '#3498DB' },
-            { name: '小飞侠', avatar: '🚀', score: 580, distance: 180, maxCombo: 20, color: '#E74C3C' },
-            { name: '跑步新手', avatar: '🐣', score: 420, distance: 165, maxCombo: 15, color: '#2ECC71' },
-            { name: '慢跑达人', avatar: '🐢', score: 280, distance: 142, maxCombo: 10, color: '#95A5A6' }
+            { name: '闪电侠', avatar: '⚡', score: 8520, distance: 800, maxCombo: 120, color: '#FFD700' },
+            { name: '风行者', avatar: '🌪️', score: 7680, distance: 780, maxCombo: 105, color: '#C0C0C0' },
+            { name: '疾风少年', avatar: '💨', score: 6450, distance: 720, maxCombo: 92, color: '#CD7F32' },
+            { name: '跑步达人', avatar: '🏃', score: 5200, distance: 650, maxCombo: 78, color: '#4ECDC4' },
+            { name: '节奏大师', avatar: '🎵', score: 4500, distance: 600, maxCombo: 68, color: '#FF6B6B' },
+            { name: '马拉松王', avatar: '👑', score: 3800, distance: 550, maxCombo: 55, color: '#9B59B6' },
+            { name: '追风者', avatar: '🦅', score: 3200, distance: 480, maxCombo: 45, color: '#3498DB' },
+            { name: '小飞侠', avatar: '🚀', score: 2600, distance: 400, maxCombo: 38, color: '#E74C3C' },
+            { name: '跑步新手', avatar: '🐣', score: 1800, distance: 300, maxCombo: 28, color: '#2ECC71' },
+            { name: '慢跑达人', avatar: '🐢', score: 1200, distance: 220, maxCombo: 20, color: '#95A5A6' }
         ];
 
         let leaderboardData = [...defaultLeaderboard];
@@ -966,7 +966,7 @@
             stamina: 100,
             maxStamina: 100,
             distance: 0,
-            levelGoal: 200,
+            levelGoal: 800,
             combo: 0,
             maxCombo: 0,
             isRunning: false,
