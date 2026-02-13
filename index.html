@@ -481,9 +481,29 @@
             font-weight: bold;
             color: #4CAF50;
         }
-        #restartBtn {
+        #gameOverButtons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
             margin-top: 30px;
             margin-bottom: 50px;
+        }
+        #shareBtn {
+            padding: 18px 50px;
+            font-size: 32px;
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+        }
+        #shareBtn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6);
+        }
+        #restartBtn {
             padding: 20px 60px;
             font-size: 36px;
             background: #4CAF50;
@@ -812,7 +832,10 @@
                     <h2>🏆 排行榜</h2>
                     <div id="gameOverLeaderboardList"></div>
                 </div>
-                <button id="restartBtn">再来一次</button>
+                <div id="gameOverButtons">
+                    <button id="shareBtn">📤 分享给好友</button>
+                    <button id="restartBtn">再来一次</button>
+                </div>
             </div>
         </div>
     </div>
@@ -1677,6 +1700,34 @@
 
         document.getElementById('clickArea').addEventListener('click', run);
         document.getElementById('restartBtn').addEventListener('click', restartGame);
+        document.getElementById('shareBtn').addEventListener('click', async () => {
+            const score = document.getElementById('finalScore').querySelector('span').textContent;
+            const distance = document.getElementById('finalDistance').textContent;
+            const combo = document.getElementById('finalCombo').textContent;
+            const playerName = gameState.playerName;
+            
+            const shareData = {
+                title: 'RUNaRUN 跑步节奏游戏',
+                text: `${playerName} 在 RUNaRUN 跑了 ${distance} 米，最高连击 ${combo}，得分 ${score}！来挑战我吧！`,
+                url: window.location.href
+            };
+            
+            if (navigator.share) {
+                try {
+                    await navigator.share(shareData);
+                } catch (err) {
+                    console.log('分享取消或失败');
+                }
+            } else {
+                const text = `${shareData.text}\n${shareData.url}`;
+                if (navigator.clipboard) {
+                    await navigator.clipboard.writeText(text);
+                    alert('链接已复制到剪贴板！快去分享给好友吧！');
+                } else {
+                    alert('你的浏览器不支持分享功能，请手动复制链接分享。');
+                }
+            }
+        });
         document.getElementById('startBtn').addEventListener('click', startCountdown);
         document.getElementById('randomNameBtn').addEventListener('click', () => {
             document.getElementById('playerNameInput').value = generateRandomName();
