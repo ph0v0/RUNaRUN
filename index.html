@@ -518,8 +518,54 @@
         }
         #startScreen p {
             font-size: 36px;
-            margin-bottom: 50px;
+            margin-bottom: 30px;
             color: #ccc;
+        }
+        #nameInputContainer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+        #nameLabel {
+            font-size: 28px;
+            margin-bottom: 15px;
+            color: #aaa;
+        }
+        #nameInputRow {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        #playerNameInput {
+            width: 400px;
+            padding: 15px 25px;
+            font-size: 32px;
+            border: 3px solid #4CAF50;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            text-align: center;
+            outline: none;
+        }
+        #playerNameInput:focus {
+            border-color: #FFD700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+        #playerNameInput::placeholder {
+            color: #666;
+        }
+        #randomNameBtn {
+            padding: 15px 25px;
+            font-size: 28px;
+            background: linear-gradient(135deg, #FF9800, #F57C00);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+        }
+        #randomNameBtn:hover {
+            transform: scale(1.05);
         }
         #startBtn {
             padding: 25px 80px;
@@ -679,6 +725,13 @@
         <div id="startScreen">
             <h1>🏃 跑步节奏游戏</h1>
             <p>准备好开始比赛了吗？</p>
+            <div id="nameInputContainer">
+                <div id="nameLabel">输入你的游戏名</div>
+                <div id="nameInputRow">
+                    <input type="text" id="playerNameInput" placeholder="请输入名字" maxlength="12">
+                    <button id="randomNameBtn">🎲 随机</button>
+                </div>
+            </div>
             <button id="startBtn">开始比赛</button>
             <button id="leaderboardBtn">🏆 排行榜</button>
         </div>
@@ -901,10 +954,27 @@
             scoreParticles: [],
             playerState: 'normal',
             opponentDistance: 0,
-            gameStarted: false
+            gameStarted: false,
+            playerName: ''
         };
 
+        const namePrefixes = ['Swift', 'Flash', 'Storm', 'Blaze', 'Shadow', 'Thunder', 'Frost', 'Nova', 'Spark', 'Viper', 'Ghost', 'Falcon', 'Wolf', 'Eagle', 'Phoenix', 'Dragon', 'Tiger', 'Lion', 'Hawk', 'Raven'];
+        
+        function generateRandomName() {
+            const prefix = namePrefixes[Math.floor(Math.random() * namePrefixes.length)];
+            const number = Math.floor(Math.random() * 1000);
+            return prefix + number;
+        }
+
         function startCountdown() {
+            const nameInput = document.getElementById('playerNameInput');
+            let playerName = nameInput.value.trim();
+            
+            if (!playerName) {
+                playerName = generateRandomName();
+            }
+            
+            gameState.playerName = playerName;
             document.getElementById('startScreen').style.display = 'none';
             const countdownDiv = document.getElementById('countdown');
             const countdownNumber = document.getElementById('countdownNumber');
@@ -1507,7 +1577,7 @@
             document.getElementById('finalScore').querySelector('span').textContent = playerScore;
             
             const playerData = {
-                name: '玩家',
+                name: gameState.playerName || 'Player',
                 avatar: '🏃',
                 score: playerScore,
                 distance: playerDistance,
@@ -1519,13 +1589,12 @@
             await loadLeaderboard();
             
             const allData = [...leaderboardData];
-            const playerIndex = allData.findIndex(p => p.score === playerScore && p.distance === playerDistance);
             
             const list = document.getElementById('gameOverLeaderboardList');
             list.innerHTML = '';
             
             allData.slice(0, 10).forEach((player, index) => {
-                const isPlayer = player.score === playerScore && player.distance === playerDistance && player.maxCombo === playerMaxCombo;
+                const isPlayer = player.name === gameState.playerName && player.score === playerScore;
                 const item = document.createElement('div');
                 item.className = `gameover-leaderboard-item${isPlayer ? ' player' : ''}`;
                 item.innerHTML = `
@@ -1612,6 +1681,9 @@
         document.getElementById('clickArea').addEventListener('click', run);
         document.getElementById('restartBtn').addEventListener('click', restartGame);
         document.getElementById('startBtn').addEventListener('click', startCountdown);
+        document.getElementById('randomNameBtn').addEventListener('click', () => {
+            document.getElementById('playerNameInput').value = generateRandomName();
+        });
         document.getElementById('leaderboardBtn').addEventListener('click', () => {
             document.getElementById('leaderboard').style.display = 'flex';
         });
@@ -1630,6 +1702,7 @@
         updateStateUI();
         loadLeaderboard().then(() => renderLeaderboard());
         resizeGame();
+        document.getElementById('playerNameInput').value = generateRandomName();
         requestAnimationFrame(gameLoop);
     </script>
 </body>
