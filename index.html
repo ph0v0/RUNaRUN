@@ -975,7 +975,8 @@
             playerState: 'normal',
             opponentDistance: 0,
             gameStarted: false,
-            playerName: ''
+            playerName: '',
+            pendingBeatInterval: null
         };
 
         const namePrefixes = ['Swift', 'Flash', 'Storm', 'Blaze', 'Shadow', 'Thunder', 'Frost', 'Nova', 'Spark', 'Viper', 'Ghost', 'Falcon', 'Wolf', 'Eagle', 'Phoenix', 'Dragon', 'Tiger', 'Lion', 'Hawk', 'Raven'];
@@ -1062,7 +1063,7 @@
             if (newState !== gameState.playerState) {
                 gameState.playerState = newState;
                 const state = playerStates[newState];
-                gameState.beatInterval = state.beatInterval;
+                gameState.pendingBeatInterval = state.beatInterval;
                 
                 updateStateUI();
             }
@@ -1465,6 +1466,12 @@
             
             if (timestamp >= gameState.nextBeatTime) {
                 gameState.lastBeatTime = timestamp;
+                
+                if (gameState.pendingBeatInterval) {
+                    gameState.beatInterval = gameState.pendingBeatInterval;
+                    gameState.pendingBeatInterval = null;
+                }
+                
                 gameState.nextBeatTime = timestamp + gameState.beatInterval;
             }
 
@@ -1647,6 +1654,7 @@
             gameState.scoreParticles = [];
             gameState.playerState = 'normal';
             gameState.beatInterval = playerStates.normal.beatInterval;
+            gameState.pendingBeatInterval = null;
             gameState.opponentDistance = 0;
             gameState.gameStarted = false;
 
