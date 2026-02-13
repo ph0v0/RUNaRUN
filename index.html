@@ -766,7 +766,7 @@
             </div>
             <button id="startBtn">开始比赛</button>
             <button id="leaderboardBtn">🏆 排行榜</button>
-            <div id="version">v1.0.3</div>
+            <div id="version">v1.0.4</div>
         </div>
         <div id="leaderboard">
             <h1>🏆 排行榜</h1>
@@ -1242,45 +1242,73 @@
         function drawTrees() {
             const horizon = H * 0.4;
             const time = Date.now() * 0.001;
+            const roadWidth = 600;
+            const topWidth = 50;
+            
+            trees.sort((a, b) => b.z - a.z);
             
             trees.forEach((tree) => {
                 if (gameState.isRunning) {
                     tree.z -= 8;
                     if (tree.z < 50) {
                         tree.z = 1000;
-                        tree.height = Math.random() * 100 + 60;
-                        tree.type = TREE_TYPES[Math.floor(Math.random() * TREE_TYPES.length)];
-                        tree.offsetX = (Math.random() - 0.5) * 100;
+                        tree.height = Math.random() * 80 + 50;
+                        tree.offsetX = (Math.random() - 0.5) * 60;
                     }
                 }
 
-                const progress = tree.z / 1000;
-                const scale = 1 - progress;
+                const t = 1 - tree.z / 1000;
+                const perspectiveT = Math.pow(t, 1.5);
                 
-                const baseX = tree.side === 'left' ? 150 : W - 150;
-                const screenX = baseX + tree.offsetX * scale;
-                const screenY = horizon + (H - horizon - 200) * scale;
-                const screenHeight = tree.height * scale * 2;
-                const screenWidth = screenHeight * 0.5;
+                const roadWidthAtZ = topWidth + (roadWidth - topWidth) * perspectiveT;
+                const roadCenter = W / 2;
+                const roadEdge = tree.side === 'left' 
+                    ? roadCenter - roadWidthAtZ / 2 
+                    : roadCenter + roadWidthAtZ / 2;
+                
+                const treeDistance = 80 + tree.offsetX * perspectiveT;
+                const screenX = tree.side === 'left' 
+                    ? roadEdge - treeDistance 
+                    : roadEdge + treeDistance;
+                
+                const screenY = horizon + (H - horizon) * perspectiveT;
+                const screenHeight = tree.height * perspectiveT * 2.5;
+                const screenWidth = screenHeight * 0.4;
 
-                if (screenHeight < 10) return;
+                if (screenHeight < 15) return;
 
-                const alpha = Math.min(1, scale * 1.5);
-                const sway = Math.sin(time * 2 + tree.swayOffset) * 5 * scale;
+                const depthFactor = Math.min(1, t * 1.2);
+                const sway = Math.sin(time * 1.5 + tree.swayOffset) * 3 * perspectiveT;
 
                 ctx.save();
                 ctx.translate(screenX + sway, screenY);
 
-                ctx.fillStyle = `rgba(30, 80, 40, ${alpha})`;
+                const trunkColor = `rgba(80, 50, 30, ${depthFactor * 0.9})`;
+                const leafDark = `rgba(40, 55, 35, ${depthFactor * 0.85})`;
+                const leafLight = `rgba(55, 75, 45, ${depthFactor * 0.8})`;
+
+                ctx.fillStyle = trunkColor;
+                ctx.fillRect(-screenWidth * 0.12, screenHeight * 0.6, screenWidth * 0.24, screenHeight * 0.4);
+
+                ctx.fillStyle = leafDark;
                 ctx.beginPath();
                 ctx.moveTo(0, 0);
-                ctx.lineTo(-screenWidth, screenHeight);
-                ctx.lineTo(screenWidth, screenHeight);
+                ctx.lineTo(-screenWidth * 0.6, screenHeight * 0.5);
+                ctx.lineTo(-screenWidth * 0.3, screenHeight * 0.5);
+                ctx.lineTo(-screenWidth * 0.8, screenHeight * 0.75);
+                ctx.lineTo(screenWidth * 0.8, screenHeight * 0.75);
+                ctx.lineTo(screenWidth * 0.3, screenHeight * 0.5);
+                ctx.lineTo(screenWidth * 0.6, screenHeight * 0.5);
                 ctx.closePath();
                 ctx.fill();
 
-                ctx.fillStyle = `rgba(60, 40, 25, ${alpha})`;
-                ctx.fillRect(-screenWidth * 0.15, screenHeight * 0.8, screenWidth * 0.3, screenHeight * 0.2);
+                ctx.fillStyle = leafLight;
+                ctx.beginPath();
+                ctx.moveTo(0, screenHeight * 0.1);
+                ctx.lineTo(-screenWidth * 0.4, screenHeight * 0.4);
+                ctx.lineTo(screenWidth * 0.4, screenHeight * 0.4);
+                ctx.closePath();
+                ctx.fill();
 
                 ctx.restore();
             });
