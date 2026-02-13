@@ -766,7 +766,7 @@
             </div>
             <button id="startBtn">开始比赛</button>
             <button id="leaderboardBtn">🏆 排行榜</button>
-            <div id="version">v1.0.4</div>
+            <div id="version">v1.0.5</div>
         </div>
         <div id="leaderboard">
             <h1>🏆 排行榜</h1>
@@ -1153,12 +1153,13 @@
         }
 
         function drawSky() {
-            const gradient = ctx.createLinearGradient(0, 0, 0, H * 0.6);
+            const horizon = H * 0.4;
+            const gradient = ctx.createLinearGradient(0, 0, 0, horizon);
             gradient.addColorStop(0, '#1a1a3e');
             gradient.addColorStop(0.5, '#2d2d5a');
             gradient.addColorStop(1, '#4a4a7a');
             ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, W, H * 0.6);
+            ctx.fillRect(0, 0, W, horizon);
 
             clouds.forEach(cloud => {
                 cloud.x -= cloud.speed * (gameState.isRunning ? 2 : 0.5);
@@ -1266,13 +1267,13 @@
                     ? roadCenter - roadWidthAtZ / 2 
                     : roadCenter + roadWidthAtZ / 2;
                 
-                const treeDistance = 80 + tree.offsetX * perspectiveT;
+                const treeDistance = 150 + tree.offsetX * perspectiveT;
                 const screenX = tree.side === 'left' 
                     ? roadEdge - treeDistance 
                     : roadEdge + treeDistance;
                 
                 const screenY = horizon + (H - horizon) * perspectiveT;
-                const screenHeight = tree.height * perspectiveT * 2.5;
+                const screenHeight = tree.height * perspectiveT * 5;
                 const screenWidth = screenHeight * 0.4;
 
                 if (screenHeight < 15) return;
@@ -1757,8 +1758,8 @@
             }
 
             drawSky();
-            drawRoad();
             drawTrees();
+            drawRoad();
             drawSpeedLines();
             drawFirstPersonView();
             drawParticles();
