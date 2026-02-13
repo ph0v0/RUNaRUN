@@ -766,7 +766,7 @@
             </div>
             <button id="startBtn">开始比赛</button>
             <button id="leaderboardBtn">🏆 排行榜</button>
-            <div id="version">v1.0.7</div>
+            <div id="version">v1.0.8</div>
         </div>
         <div id="leaderboard">
             <h1>🏆 排行榜</h1>
@@ -1189,29 +1189,32 @@
             ctx.closePath();
             ctx.fill();
 
-            ctx.strokeStyle = '#555';
-            ctx.lineWidth = 3;
             for (let i = 0; i < 20; i++) {
                 const t = (i / 20 + gameState.roadOffset * 0.001) % 1;
                 const perspectiveT = Math.pow(t, 1.5);
                 const y = horizon + (H - horizon) * perspectiveT;
                 const width = roadTopWidth + (roadBottomWidth - roadTopWidth) * perspectiveT;
+                const depthFactor = Math.min(1, t * 1.2);
                 
+                ctx.strokeStyle = `rgba(85, 85, 85, ${depthFactor * 0.8})`;
+                ctx.lineWidth = 3 * perspectiveT + 1;
                 ctx.beginPath();
                 ctx.moveTo(W / 2 - width / 2, y);
                 ctx.lineTo(W / 2 + width / 2, y);
                 ctx.stroke();
             }
 
-            ctx.strokeStyle = '#FFD700';
-            ctx.lineWidth = 5;
             for (let i = 0; i < 15; i++) {
                 const t = ((i * 2 + gameState.roadOffset * 0.002) % 30) / 30;
                 const nextT = ((i * 2 + 1 + gameState.roadOffset * 0.002) % 30) / 30;
-                const y = horizon + (H - horizon) * Math.pow(t, 1.5);
+                const perspectiveT = Math.pow(t, 1.5);
+                const y = horizon + (H - horizon) * perspectiveT;
                 const nextY = horizon + (H - horizon) * Math.pow(nextT, 1.5);
+                const depthFactor = Math.min(1, t * 1.2);
                 
                 if (y < H && nextY < H) {
+                    ctx.strokeStyle = `rgba(255, 215, 0, ${depthFactor * 0.9})`;
+                    ctx.lineWidth = 5 * perspectiveT + 2;
                     ctx.beginPath();
                     ctx.moveTo(W / 2, y);
                     ctx.lineTo(W / 2, Math.min(nextY, H));
@@ -1229,6 +1232,12 @@
             ctx.moveTo(W / 2 + roadTopWidth / 2, horizon);
             ctx.lineTo(W / 2 + roadBottomWidth / 2, H);
             ctx.stroke();
+            
+            const fogGradient = ctx.createLinearGradient(0, horizon, 0, horizon + 300);
+            fogGradient.addColorStop(0, 'rgba(74, 74, 122, 0.6)');
+            fogGradient.addColorStop(1, 'rgba(74, 74, 122, 0)');
+            ctx.fillStyle = fogGradient;
+            ctx.fillRect(0, horizon, W, 300);
         }
 
         function drawTrees() {
@@ -1258,13 +1267,13 @@
                     ? roadCenter - roadWidthAtZ / 2 
                     : roadCenter + roadWidthAtZ / 2;
                 
-                const treeDistance = 150 + tree.offsetX * perspectiveT;
+                const treeDistance = 220 + tree.offsetX * perspectiveT;
                 const screenX = tree.side === 'left' 
                     ? roadEdge - treeDistance 
                     : roadEdge + treeDistance;
                 
                 const screenY = horizon + (H - horizon) * perspectiveT;
-                const screenHeight = tree.height * perspectiveT * 7.5;
+                const screenHeight = tree.height * perspectiveT * 11.25;
                 const screenWidth = screenHeight * 0.4;
 
                 if (screenHeight < 15) return;
