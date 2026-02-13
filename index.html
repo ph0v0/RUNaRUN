@@ -1109,14 +1109,31 @@
         }
 
         const trees = [];
-        for (let i = 0; i < 20; i++) {
-            trees.push({
-                x: (Math.random() - 0.5) * 2000,
-                z: Math.random() * 1000 + 100,
-                height: Math.random() * 150 + 100,
-                type: Math.floor(Math.random() * 3)
-            });
+        const TREE_TYPES = ['pine', 'oak', 'birch'];
+        
+        function createTree(side, z) {
+            const baseX = side === 'left' ? -350 : 350;
+            const offsetX = (Math.random() - 0.5) * 150;
+            return {
+                side: side,
+                x: baseX + offsetX,
+                z: z || Math.random() * 1000 + 50,
+                height: Math.random() * 120 + 80,
+                type: TREE_TYPES[Math.floor(Math.random() * TREE_TYPES.length)],
+                swayOffset: Math.random() * Math.PI * 2,
+                swaySpeed: Math.random() * 0.02 + 0.01
+            };
         }
+        
+        function initTrees() {
+            trees.length = 0;
+            for (let i = 0; i < 30; i++) {
+                trees.push(createTree('left', Math.random() * 1000 + 50));
+                trees.push(createTree('right', Math.random() * 1000 + 50));
+            }
+        }
+        
+        initTrees();
 
         const clouds = [];
         for (let i = 0; i < 10; i++) {
@@ -1217,34 +1234,120 @@
 
         function drawTrees() {
             const horizon = H * 0.4;
+            const time = Date.now() * 0.001;
             
-            trees.forEach(tree => {
+            trees.forEach((tree, index) => {
                 if (gameState.isRunning) {
-                    tree.z -= 5;
-                    if (tree.z < 0) {
-                        tree.z = 1000;
-                        tree.x = (Math.random() - 0.5) * 2000;
+                    const speedMultiplier = 1000 / Math.max(tree.z, 50);
+                    tree.z -= 3 + speedMultiplier * 2;
+                    
+                    if (tree.z < 30) {
+                        tree.z = 1000 + Math.random() * 200;
+                        const baseX = tree.side === 'left' ? -350 : 350;
+                        tree.x = baseX + (Math.random() - 0.5) * 150;
+                        tree.height = Math.random() * 120 + 80;
+                        tree.type = TREE_TYPES[Math.floor(Math.random() * TREE_TYPES.length)];
                     }
                 }
 
-                const scale = 500 / tree.z;
-                const screenX = W / 2 + tree.x * scale;
-                const screenY = horizon + (H - horizon) * (1 - 500 / tree.z) * 0.3;
-                const screenHeight = tree.height * scale;
+                const perspective = 400 / Math.max(tree.z, 30);
+                const screenX = W / 2 + tree.x * perspective;
+                const baseY = horizon + (H - horizon) * 0.1;
+                const screenY = baseY + (H - baseY) * (1 - tree.z / 1000);
+                const screenHeight = tree.height * perspective;
+                const screenWidth = screenHeight * 0.6;
 
-                if (screenY > horizon && screenY < H) {
-                    ctx.fillStyle = '#1a3a1a';
-                    ctx.beginPath();
-                    ctx.moveTo(screenX, screenY);
-                    ctx.lineTo(screenX - screenHeight * 0.4, screenY + screenHeight);
-                    ctx.lineTo(screenX + screenHeight * 0.4, screenY + screenHeight);
-                    ctx.closePath();
-                    ctx.fill();
-
-                    ctx.fillStyle = '#2d1a0d';
-                    ctx.fillRect(screenX - screenHeight * 0.08, screenY + screenHeight * 0.7, screenHeight * 0.16, screenHeight * 0.3);
+                if (screenY > horizon && screenY < H + 100 && screenHeight > 5) {
+                    const depthAlpha = Math.min(1, (1000 - tree.z) / 400);
+                    const sway = Math.sin(time * tree.swaySpeed * 10 + tree.swayOffset) * 5 * perspective;
+                    
+                    ctx.save();
+                    ctx.translate(screenX + sway, screenY);
+                    
+                    if (tree.type === 'pine') {
+                        const gradient = ctx.createLinearGradient(0, 0, 0, screenHeight);
+                        gradient.addColorStop(0, `rgba(20, 60, 30, ${depthAlpha})`);
+                        gradient.addColorStop(0.5, `rgba(30, 80, 40, ${depthAlpha})`);
+                        gradient.addColorStop(1, `rgba(25, 70, 35, ${depthAlpha})`);
+                        ctx.fillStyle = gradient;
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(0, 0);
+                        ctx.lineTo(-screenWidth * 0.5, screenHeight * 0.4);
+                        ctx.lineTo(-screenWidth * 0.3, screenHeight * 0.4);
+                        ctx.lineTo(-screenWidth * 0.65, screenHeight * 0.65);
+                        ctx.lineTo(-screenWidth * 0.2, screenHeight * 0.65);
+                        ctx.lineTo(-screenWidth * 0.8, screenHeight);
+                        ctx.lineTo(screenWidth * 0.8, screenHeight);
+                        ctx.lineTo(screenWidth * 0.2, screenHeight * 0.65);
+                        ctx.lineTo(screenWidth * 0.65, screenHeight * 0.65);
+                        ctx.lineTo(screenWidth * 0.3, screenHeight * 0.4);
+                        ctx.lineTo(screenWidth * 0.5, screenHeight * 0.4);
+                        ctx.closePath();
+                        ctx.fill();
+                        
+                        ctx.fillStyle = `rgba(60, 40, 25, ${depthAlpha})`;
+                        ctx.fillRect(-screenWidth * 0.1, screenHeight * 0.85, screenWidth * 0.2, screenHeight * 0.15);
+                        
+                    } else if (tree.type === 'oak') {
+                        const trunkHeight = screenHeight * 0.35;
+                        const crownHeight = screenHeight * 0.7;
+                        
+                        ctx.fillStyle = `rgba(70, 45, 25, ${depthAlpha})`;
+                        ctx.fillRect(-screenWidth * 0.1, screenHeight - trunkHeight, screenWidth * 0.2, trunkHeight);
+                        
+                        const crownGradient = ctx.createRadialGradient(0, screenHeight - trunkHeight - crownHeight * 0.3, 0, 0, screenHeight - trunkHeight - crownHeight * 0.3, crownHeight * 0.6);
+                        crownGradient.addColorStop(0, `rgba(50, 100, 50, ${depthAlpha})`);
+                        crownGradient.addColorStop(0.5, `rgba(40, 85, 40, ${depthAlpha})`);
+                        crownGradient.addColorStop(1, `rgba(30, 70, 35, ${depthAlpha})`);
+                        ctx.fillStyle = crownGradient;
+                        
+                        ctx.beginPath();
+                        ctx.arc(0, screenHeight - trunkHeight - crownHeight * 0.3, crownHeight * 0.6, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        ctx.beginPath();
+                        ctx.arc(-crownHeight * 0.35, screenHeight - trunkHeight - crownHeight * 0.1, crownHeight * 0.4, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        ctx.beginPath();
+                        ctx.arc(crownHeight * 0.35, screenHeight - trunkHeight - crownHeight * 0.15, crownHeight * 0.45, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                    } else if (tree.type === 'birch') {
+                        const trunkHeight = screenHeight * 0.85;
+                        
+                        const trunkGradient = ctx.createLinearGradient(-screenWidth * 0.08, 0, screenWidth * 0.08, 0);
+                        trunkGradient.addColorStop(0, `rgba(200, 200, 190, ${depthAlpha})`);
+                        trunkGradient.addColorStop(0.3, `rgba(240, 240, 230, ${depthAlpha})`);
+                        trunkGradient.addColorStop(0.7, `rgba(220, 220, 210, ${depthAlpha})`);
+                        trunkGradient.addColorStop(1, `rgba(180, 180, 170, ${depthAlpha})`);
+                        ctx.fillStyle = trunkGradient;
+                        ctx.fillRect(-screenWidth * 0.08, screenHeight - trunkHeight, screenWidth * 0.16, trunkHeight);
+                        
+                        ctx.fillStyle = `rgba(80, 80, 80, ${depthAlpha * 0.5})`;
+                        for (let i = 0; i < 5; i++) {
+                            const markY = screenHeight - trunkHeight + trunkHeight * (i * 0.2 + 0.1);
+                            const markW = screenWidth * 0.04;
+                            ctx.fillRect(-markW, markY, markW * 2, screenHeight * 0.02);
+                        }
+                        
+                        const leafGradient = ctx.createRadialGradient(0, screenHeight - trunkHeight - screenHeight * 0.1, 0, 0, screenHeight - trunkHeight - screenHeight * 0.1, screenHeight * 0.25);
+                        leafGradient.addColorStop(0, `rgba(120, 180, 80, ${depthAlpha})`);
+                        leafGradient.addColorStop(0.7, `rgba(90, 150, 60, ${depthAlpha})`);
+                        leafGradient.addColorStop(1, `rgba(70, 120, 50, ${depthAlpha * 0.3})`);
+                        ctx.fillStyle = leafGradient;
+                        
+                        ctx.beginPath();
+                        ctx.ellipse(0, screenHeight - trunkHeight - screenHeight * 0.1, screenHeight * 0.25, screenHeight * 0.2, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    
+                    ctx.restore();
                 }
             });
+            
+            trees.sort((a, b) => b.z - a.z);
         }
 
         function drawFirstPersonView() {
