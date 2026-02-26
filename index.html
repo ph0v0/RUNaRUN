@@ -12,6 +12,7 @@
     <meta property="og:url" content="https://ph0v0.github.io/RUNaRUN/">
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
     <style>
         * {
             margin: 0;
@@ -749,6 +750,61 @@
         #leaderboardClose:hover {
             background: #888;
         }
+        #adOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+            font-family: Arial, sans-serif;
+            z-index: 200;
+        }
+        #adContainer {
+            width: 90%;
+            max-width: 800px;
+            min-height: 400px;
+            background: #222;
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        #adLoadingText {
+            font-size: 32px;
+            color: #888;
+            margin-bottom: 20px;
+        }
+        #adSkipBtn {
+            margin-top: 20px;
+            padding: 15px 40px;
+            font-size: 24px;
+            background: #4CAF50;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            display: none;
+        }
+        #adSkipBtn:hover {
+            background: #45a049;
+        }
+        #adSkipTimer {
+            margin-top: 20px;
+            font-size: 24px;
+            color: #888;
+        }
+        .ins-ad-container {
+            width: 100% !important;
+            height: 400px !important;
+        }
     </style>
 </head>
 <body>
@@ -766,7 +822,7 @@
             </div>
             <button id="startBtn">开始比赛</button>
             <button id="leaderboardBtn">🏆 排行榜</button>
-            <div id="version">v1.1.2</div>
+            <div id="version">v1.1.3</div>
         </div>
         <div id="leaderboard">
             <h1>🏆 排行榜</h1>
@@ -851,9 +907,109 @@
                 </div>
             </div>
         </div>
+        <div id="adOverlay">
+            <div id="adContainer">
+                <div id="adLoadingText">广告加载中...</div>
+                <ins class="adsbygoogle ins-ad-container"
+                     style="display:block"
+                     data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+                     data-ad-slot="XXXXXXXXXX"
+                     data-ad-format="interstitial"
+                     data-full-width-responsive="true"></ins>
+            </div>
+            <div id="adSkipTimer">请等待 <span id="adTimerCount">5</span> 秒</div>
+            <button id="adSkipBtn">跳过广告</button>
+        </div>
     </div>
 
     <script>
+        const AdManager = {
+            isAdShowing: false,
+            adSkipDelay: 5,
+            adTimer: null,
+            adCooldown: 60000,
+            lastAdTime: 0,
+
+            init: function() {
+                try {
+                    (adsbygoogle = window.adsbygoogle || []).push({});
+                    console.log('AdSense initialized');
+                } catch (e) {
+                    console.log('AdSense not available:', e);
+                }
+            },
+
+            showAd: function(callback) {
+                const now = Date.now();
+                if (now - this.lastAdTime < this.adCooldown) {
+                    console.log('Ad on cooldown');
+                    if (callback) callback();
+                    return;
+                }
+
+                if (this.isAdShowing) {
+                    if (callback) callback();
+                    return;
+                }
+
+                this.isAdShowing = true;
+                this.lastAdTime = now;
+
+                const overlay = document.getElementById('adOverlay');
+                const skipBtn = document.getElementById('adSkipBtn');
+                const timerCount = document.getElementById('adTimerCount');
+                const loadingText = document.getElementById('adLoadingText');
+
+                overlay.style.display = 'flex';
+                skipBtn.style.display = 'none';
+                timerCount.textContent = this.adSkipDelay;
+                loadingText.style.display = 'block';
+
+                let countdown = this.adSkipDelay;
+                this.adTimer = setInterval(() => {
+                    countdown--;
+                    timerCount.textContent = countdown;
+                    if (countdown <= 0) {
+                        clearInterval(this.adTimer);
+                        timerCount.style.display = 'none';
+                        skipBtn.style.display = 'block';
+                    }
+                }, 1000);
+
+                skipBtn.onclick = () => {
+                    this.hideAd(callback);
+                };
+
+                try {
+                    (adsbygoogle = window.adsbygoogle || []).push({});
+                } catch (e) {
+                    console.log('Ad push error:', e);
+                    setTimeout(() => {
+                        this.hideAd(callback);
+                    }, 2000);
+                }
+            },
+
+            hideAd: function(callback) {
+                const overlay = document.getElementById('adOverlay');
+                const timerCount = document.getElementById('adTimerCount');
+                
+                overlay.style.display = 'none';
+                timerCount.style.display = 'block';
+                
+                if (this.adTimer) {
+                    clearInterval(this.adTimer);
+                    this.adTimer = null;
+                }
+                
+                this.isAdShowing = false;
+                
+                if (callback) {
+                    callback();
+                }
+            }
+        };
+
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const W = 1080;
@@ -1692,24 +1848,10 @@
 
         async function endGame(isWin) {
             gameState.gameOver = true;
-            const gameOverDiv = document.getElementById('gameOver');
-            const title = gameOverDiv.querySelector('h1');
-            
-            if (isWin) {
-                title.textContent = '🎉 你赢了！';
-                title.style.color = '#4CAF50';
-            } else {
-                title.textContent = '😢 你输了';
-                title.style.color = '#FF6B6B';
-            }
             
             const playerDistance = Math.floor(gameState.distance);
             const playerMaxCombo = gameState.maxCombo;
             const playerScore = playerDistance * 10 + playerMaxCombo * 5;
-            
-            document.getElementById('finalDistance').textContent = playerDistance;
-            document.getElementById('finalCombo').textContent = playerMaxCombo;
-            document.getElementById('finalScore').querySelector('span').textContent = playerScore;
             
             const playerData = {
                 name: gameState.playerName || 'Player',
@@ -1722,6 +1864,27 @@
             
             await saveScore(playerData);
             await loadLeaderboard();
+            
+            AdManager.showAd(() => {
+                showGameOverScreen(isWin, playerScore, playerDistance, playerMaxCombo, playerData);
+            });
+        }
+
+        function showGameOverScreen(isWin, playerScore, playerDistance, playerMaxCombo, playerData) {
+            const gameOverDiv = document.getElementById('gameOver');
+            const title = gameOverDiv.querySelector('h1');
+            
+            if (isWin) {
+                title.textContent = '🎉 你赢了！';
+                title.style.color = '#4CAF50';
+            } else {
+                title.textContent = '😢 你输了';
+                title.style.color = '#FF6B6B';
+            }
+            
+            document.getElementById('finalDistance').textContent = playerDistance;
+            document.getElementById('finalCombo').textContent = playerMaxCombo;
+            document.getElementById('finalScore').querySelector('span').textContent = playerScore;
             
             const allData = sortLeaderboard([...leaderboardData]);
             
@@ -1870,6 +2033,7 @@
         loadLeaderboard().then(() => renderLeaderboard());
         resizeGame();
         document.getElementById('playerNameInput').value = generateRandomName();
+        AdManager.init();
         requestAnimationFrame(gameLoop);
     </script>
 </body>
